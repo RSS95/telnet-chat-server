@@ -22,19 +22,19 @@ void incrJsonCapacity(Json *);
 String getVal(Json, String);
 
 
-int main()
-{
-    Json j = createJson();
-    String kv = getStringFrom("Ritesh:Salian");
-    addJson(&j, kv);
-    String k = getStringFrom("Ritesh");
-    String v = getVal(j, k);
-    nextLine();
-    printf("Value for Ritesh : ");
-    printS(&v);
-
-    return 0;
-}
+//int main()
+//{
+//    Json j = createJson();
+//    String kv = getStringFrom("Ritesh:Salian");
+//    addJson(&j, kv);
+//    String k = getStringFrom("Ritesh");
+//    String v = getVal(j, k);
+//    nextLine();
+//    printf("Value for Ritesh : ");
+//    printS(&v);
+//
+//    return 0;
+//}
 
 Entry createEntry(String str)
 {

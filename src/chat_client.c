@@ -10,10 +10,17 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <uuid/uuid.h>
+#include "./../include/string_array.h"
 
 #define PORT "9900"
-#define SERVER_IP "192.168.1.3"
+#define SERVER_IP "192.168.1.7"
 #define MAXDATASIZE 100 // max number of bytes we can get at once
+
+
+short registerToServer(int);
+void *get_in_addr(struct sockaddr *);
+
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -79,16 +86,17 @@ int main()
 	
 	
 		
-		if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) 
-		{
-			perror("recv");
-			exit(1);
-		}
+		//if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) 
+		//{
+		//	perror("recv");
+		//	exit(1);
+		//}
 
-		buf[numbytes] = '\0';
+		//buf[numbytes] = '\0';
 
-		printf("client: received '%s'\n",buf);
+		//printf("client: received '%s'\n",buf);
 	
+        registerToServer(sockfd);
 
 		close(sockfd);
 	}
@@ -101,8 +109,40 @@ int main()
  * return 1 : True  -> for registeration successful
  * return 0 : False -> for registeration unsuccessful
  */
-short registerToServer()
+short registerToServer(int sockfd)
 {
+    char *buf;
+    if(recv(sockfd, buf, MAXDATASIZE - 1, 0) == -1)
+    {
+        perror("recv");
+        return 0;
+    }
 
+    printC(buf);
+
+    char *rss = "RSS_";
+
+    uuid_t binuuid;
+    uuid_generate_random(binuuid);
+    char *uuid = malloc(37);
+    uuid_unparse(binuuid, uuid);
+    char *uid = "user_id:";
+    strcat(rss, uuid);
+    strcat(uid, rss);
+    String userid = getString(uid);
+
+    if (send(sockfd, uid, userid.length, 0) == -1)
+    {
+        perror("Server Outbound::: Error Sending Message to Connection");
+    }
+
+    if(recv(sockfd, buf, MAXDATASIZE - 1, 0) == -1)
+    {
+        perror("recv");
+        return 0;
+    }
+
+    printC(buf);
+
+    return 1;
 }
-
