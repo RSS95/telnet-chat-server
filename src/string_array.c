@@ -160,16 +160,21 @@ void printC(char *array)
 
 void appendStr(String *string, char *append)
 {
+    printf("Append String :: (\"");
+
     printS(string);
     //nextLine();
-    printf(" : + : ");
+    printf("\")  +  (\"");
     printC(append);
-    nextLine();
+    printf("\"");
+//    nextLine();
+
     int appendLen = strLen(append);
     if(string->length + appendLen > string->capacity)
     {
         incrCapacity(string, appendLen);
-        printS(string);
+//        printS(string);
+        printf(")");
         nextLine();
         appendStr(string, append);
     }
@@ -183,7 +188,15 @@ void appendStr(String *string, char *append)
 
         string->string[i] = append[c];
         string->length = string->length + appendLen - 1;
+
+        printf(") :: Result : ");
+        printS(string);
+        nextLine();
     }
+
+//    printf(") :: Result : ");
+//    printS(string);
+//    nextLine();
 }
 
 void incrCapacity(String *str, int incr)
@@ -244,6 +257,11 @@ int findPos(String str, char c)
 
 SArray split(String str, char c)
 {
+    printf("Split :: String : \"");
+    printS(&str);
+    printf("\" :: char : '%s'", &c); 
+    nextLine();
+
     SArray sarr = createSArray();
     int bcount = -1;
     for(int i = 0; i < str.length - 1; i++)
@@ -251,19 +269,22 @@ SArray split(String str, char c)
         String s = getString();
 
         int len = strLen(str.string);
-        printf("sl  : %d", len);
+        printf("Split :: String Length : %d", len);
         nextLine();
 
         for(int j = 0; j < str.length - 1; j++)
         {
 
-            printf("Base Count : %d", bcount);
-            nextLine();
+//            printf("Base Count : %d", bcount);
+//            nextLine();
 
             if(bcount++ >= str.length - 1)
             {
                 return sarr;
             }
+
+            printf("Split :: Iterator Base Count : %d", bcount);
+            nextLine();
 
             if((str.string[bcount] == c) || (bcount >= str.length - 1))
             {
@@ -273,8 +294,9 @@ SArray split(String str, char c)
             }
             else
             {
-                char *f = malloc(sizeof(char));
+                char *f = malloc(2 * sizeof(char));
                 f[0] = str.string[bcount];
+                f[1] = '\0';
                 appendStr(&s, f);
             }
         }

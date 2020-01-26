@@ -1,25 +1,26 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include "./../include/json.h"
 #include "./../include/string_array.h"
 
 
-struct Entry{
-    String key;
-    String value;
-}typedef Entry;
-
-struct Json{
-    Entry *entry;
-    int size;
-    int capacity;
-}typedef Json;
-
-
-Entry createEntry();
-Json createJson();
-void addJson(Json *, String);
-void incrJsonCapacity(Json *);
-String getVal(Json, String);
+//struct Entry{
+//    String key;
+//    String value;
+//}typedef Entry;
+//
+//struct Json{
+//    Entry *entry;
+//    int size;
+//    int capacity;
+//}typedef Json;
+//
+//
+//Entry createEntry();
+//Json createJson();
+//void addJson(Json *, String);
+//void incrJsonCapacity(Json *);
+//String getVal(Json, String);
 
 
 //int main()
@@ -94,4 +95,10 @@ String getVal(Json json, String key)
             return e[i].value;
         }
     }
+    
+    printf("Json ::: getVal :: Key not found : %s", key.string);
+    nextLine();
+    printf("Program Exit");
+    nextLine();
+    exit(0);
 }

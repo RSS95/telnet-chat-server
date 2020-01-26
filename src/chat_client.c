@@ -35,6 +35,9 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main()
 {
+    printf("Telnet Client Started");
+    nextLine();
+
 	int sockfd, numbytes;
 	char buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
@@ -80,7 +83,7 @@ int main()
 		}
 
 		inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s, sizeof s);
-		printf("client: connecting to %s\n", s);
+		printf("Client: connecting to %s\n", s);
 	
 		//freeaddrinfo(servinfo); // all done with this structure
 	
@@ -99,7 +102,11 @@ int main()
         registerToServer(sockfd);
 
 		close(sockfd);
+
+        break;
 	}
+
+    printf("Client Shutdown");
 
 	return 0;
 }
@@ -111,14 +118,21 @@ int main()
  */
 short registerToServer(int sockfd)
 {
-    char *buf;
-    if(recv(sockfd, buf, MAXDATASIZE - 1, 0) == -1)
+    char *buf = malloc(100 * sizeof(char));
+
+    printf("Waiting to Receive Confirmation to register");
+    nextLine();
+
+    if(recv(sockfd, buf, 100, 0) == -1)
     {
-        perror("recv");
-        return 0;
+        perror("Client Receive ::");
+        //return 0;
+        exit(0);
     }
 
+    printf("Received :: ");
     printC(buf);
+    nextLine();
 
     char *rss = "RSS_";
 
@@ -126,23 +140,48 @@ short registerToServer(int sockfd)
     uuid_generate_random(binuuid);
     char *uuid = malloc(37);
     uuid_unparse(binuuid, uuid);
-    char *uid = "user_id:";
-    strcat(rss, uuid);
-    strcat(uid, rss);
-    String userid = getString(uid);
+    char *uid = "user_name:";
 
-    if (send(sockfd, uid, userid.length, 0) == -1)
+    char *temp = malloc(100 * sizeof(char));
+
+    strcat(temp, rss);
+    strcat(temp, uuid);
+    
+    char *temp2 = malloc(100 * sizeof(char));
+
+    strcat(temp2, uid);
+    strcat(temp2, temp);
+
+    String userid = getStringFrom(temp2);
+    printC(userid.string);
+    nextLine();
+
+    char *dd = userid.string;
+    int leen = strLen(dd);
+
+    if (send(sockfd, dd, leen, 0) == -1)
     {
         perror("Server Outbound::: Error Sending Message to Connection");
     }
 
-    if(recv(sockfd, buf, MAXDATASIZE - 1, 0) == -1)
+    printf("register message send");
+    nextLine();
+
+    buf = malloc(100 * sizeof(char));
+
+    printf("waiting for response");
+    nextLine();
+
+    if(recv(sockfd, buf, 100, 0) == -1)
     {
-        perror("recv");
-        return 0;
+        perror("Client Receive ::");
+        //return 0;
+        exit(0);
     }
 
+    printf("Received :: ");
     printC(buf);
+    nextLine();
 
     return 1;
 }

@@ -14,9 +14,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <uuid/uuid.h>
-//#include "./../include/string_array.h"
+#include "./../include/string_array.h"
 #include "./../include/registry.h"
-//#include "json.c"
+#include "./../include/json.h"
 
 
 // default port for chat server
@@ -196,6 +196,9 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main()
 {
+    printf("Telnet Chat Server Started");
+    nextLine();
+
     pthread_mutex_t accept_reg_lock;
     pthread_mutex_t confirm_reg_lock;
     pthread_mutex_t chat_reg_lock;
@@ -261,6 +264,9 @@ int main()
             continue;
         }
 
+        printf("Server Socket_FD Aquired : %d", sockfd);
+        nextLine();
+
         // if port already in use, set the property to change config and reuse the same port
         // TODO: I think should disable this feature/process for production(or anywhere really)
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
@@ -299,6 +305,9 @@ int main()
         exit(1);
     }
 
+    printf("Server Listening to Port : %s", PORT);
+    nextLine();
+
     sa.sa_handler = sigchld_handler; // reap all dead processes
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
@@ -314,6 +323,7 @@ int main()
 
 
     printf("Server Setup Successful:: Waiting for Connections...\n");
+    nextLine();
 
     pthread_t acc_t, reg_t;
     pthread_attr_t attr1, attr2;
@@ -323,6 +333,7 @@ int main()
     p1.sockfd = &sockfd;
     p1.c_ter = 100;
     p1.reg = &accept_reg;
+    p1.accept_reg_lock = &accept_reg_lock;
 
     struct package p2;
     p2.reg = &accept_reg;
@@ -337,13 +348,19 @@ int main()
     rc = pthread_attr_setdetachstate(&attr1, PTHREAD_CREATE_DETACHED);
     rc = pthread_create(&acc_t, &attr1, acceptConnectionLoop, (void *)(&p1));
 
+    printf("Server Thread :: AcceptConnectionLoop Started ... :: Response Code : %d", rc);  
+    nextLine();
+
     rc = pthread_attr_init(&attr2);
     rc = pthread_attr_setdetachstate(&attr2, PTHREAD_CREATE_DETACHED);
     rc = pthread_create(&reg_t, &attr2, confirmConnectionLoop, (void *)(&p2));
 
+    printf("Server Thread :: ConfirmConnectionLoop Started ... :: Response Code : %d", rc);
+    nextLine();
+
     while(1)
     {
-        sleep(5);
+        sleep(10);
         printf("Accept Registry");
         nextLine();
         printReg(accept_reg);
@@ -406,6 +423,8 @@ int main()
  */
 void *acceptConnectionLoop(void *d)
 {
+    printf("Thread :: AcceptConnectionLoop :: Started Accepting Connection");
+    nextLine();
 
     struct package *iii = (struct package *)d;
 
@@ -423,14 +442,20 @@ void *acceptConnectionLoop(void *d)
     int error_count = 0;
     struct sockaddr_storage client_addr;
     socklen_t addr_len;
-    int client_fd;
+    int client_fd = -1;
     char client_ip[INET6_ADDRSTRLEN];
 
     while((error_count < ter_count) || (accept_ter_flag == 0))
     {
         addr_len = sizeof client_addr;
 
+        printf("Thread :: AcceptConnectionLoop :: Blocking Call to accept()");
+        nextLine();
+
         client_fd = accept(*server_sock_fd, (struct sockaddr *) &client_addr, &addr_len);
+
+        printf("Thread :: AcceptConnectionLoop :: Accepted Client FD : %d", client_fd);
+        nextLine();
 
         if(client_fd == -1)
         {
@@ -442,34 +467,40 @@ void *acceptConnectionLoop(void *d)
 
         inet_ntop(client_addr.ss_family, get_in_addr((struct sockaddr *) &client_addr), client_ip, sizeof client_ip);
 
-        printf("Server Accept Connection ::: Connection Accepted From %s", client_ip);
+        printf("Thread :: AcceptConnectionLoop ::: Connection Accepted From %s", client_ip);
         nextLine();
 
-        printf("json_BC");
         Json client_json= createJson();
-        printf("json-c");
+
+        char *oot = malloc(500 * sizeof(char));
+        char *oo = malloc(500 * sizeof(char));
         char *t = "client_sockfd:";
-        char *client_fd_s;
+        char *client_fd_s = malloc(100 * sizeof(char));
         sprintf(client_fd_s, "%d", client_fd);
-        strcat(t, client_fd_s);
-        String client_sockfd_string = getStringFrom(t);
+        strcat(oot, t);
+        strcat(oot, client_fd_s);
+
+        printf("Thread :: AcceptConnectionLoop ::: c_sockfd_string : %s", oot);
+        nextLine();
+
+        String client_sockfd_string = getStringFrom(oot);
 
         char *tt = "client_ip:";
-        strcat(tt, client_ip);
+        strcat(oo, tt);
+        strcat(oo, client_ip);
 
-        String client_ip_string = getStringFrom(tt);
+        printf("Thread :: AcceptConnectionLoop ::: c_ip_string : %s", oo);
+        nextLine();
+
+        String client_ip_string = getStringFrom(oo);
+
         addJson(&client_json, client_sockfd_string);
         addJson(&client_json, client_ip_string);
 
-        //TODO: init this mutex
-        //pthread_mutex_lock(&accept_reg_lock)
-
-        printf("here1");
+        printf("Thread :: AcceptConnectionLoop :: Add new connection to accept_reg");
+        nextLine();
 
         addReg(accept_reg, client_json, accept_reg_lock);
-
-        printf("here1");
-        //pthread_mutex_unlock(&accept_reg_lock);
     }
 
 //    if(error_count >= ter_count)
@@ -485,6 +516,9 @@ void *acceptConnectionLoop(void *d)
 //        accept_exit_flag = 2;
 //    }
 
+    printf("Thread :: AcceptConnectionLoop :: Exit");
+    nextLine();
+
     pthread_exit(0);
 }
 
@@ -494,13 +528,16 @@ void *acceptConnectionLoop(void *d)
  */
 void *confirmConnectionLoop(void *pkg)
 {
+    printf("Thread :: ConfirmConnectionLoop :: Start");
+    nextLine();
+
     Registry_Json *accept_reg = ((struct package*) pkg)->reg;
     Registry_Json *confirm_reg = ((struct package*) pkg)->reg2;
 
     pthread_mutex_t *confirm_reg_lock = ((struct package*) pkg)->confirm_reg_lock;
 
     // accept_reg count (next position to confirm)
-    int c_reg;
+    int c_reg = 0;
     // loop termination flag
     int f_loop = 1;
     // flag to sleep because no new records/clients in accept_reg registry
@@ -511,8 +548,28 @@ void *confirmConnectionLoop(void *pkg)
     {
         if(c_reg < accept_reg->size)
         {
+            printf("Thread :: ConfirmConnectionLoop :: Client Found");
+            nextLine();
+
             Json j_client = accept_reg->reg[c_reg];
-            String client_fd_s = getVal(j_client, getString("client_sockfd"));
+
+            printf("Thread :: ConfirmConnectionLoop :: Json Found");
+            nextLine();
+
+            String client_sockfd_string = getStringFrom("client_sockfd");
+            
+            printf("Find Key : ");
+            printS(&client_sockfd_string);
+            nextLine();
+
+            String client_fd_s = getVal(j_client, client_sockfd_string);
+
+            printf("Thread :: ConfirmConnectionLoop :: Register Client :: ");
+            printS(&client_fd_s);
+            nextLine();
+
+            printf("Thread :: ConfirmConnectionLoop :: Confirm Connection For Client Socket : %s", client_fd_s.string);
+            nextLine();
 
             const char *dd = client_fd_s.string;
 
@@ -531,6 +588,9 @@ void *confirmConnectionLoop(void *pkg)
             rc = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
             rc = pthread_create(&reg_con_thread, &attr, registerConnection, (void *) pkg);
 
+            printf("Thread :: ConfirmConnectionLoop :: Starting Thread : Register Connection :: for socket : %s", client_fd_s.string);
+            nextLine();
+
             //registerConnection(client_fd);
 
             String sss = getString("confirm_msg_send:true");
@@ -540,9 +600,15 @@ void *confirmConnectionLoop(void *pkg)
         }
         else
         {
+            printf("Thread :: ConfirmConnectionLoop :: nothing to confirm Sleep 10 sec");
+            nextLine();
+
             sleep(10);
         }
     }
+
+    printf("Thread :: ConfirmConnectionLoop :: EXIT");
+    nextLine();
 
     pthread_exit(0);
 }
@@ -554,8 +620,12 @@ void *confirmConnectionLoop(void *pkg)
  */
 int confirmConSuccessfull(int client_fd)
 {
+
     char *msg = "connection:true,msg:please register to server with a username";
     int mlen = strLen(msg);
+
+    printf("Send Message :: %s", msg);
+    nextLine();
 
     int msendlen = 0;
     if((msendlen = send(client_fd, msg, mlen, 0)) == -1)
@@ -579,6 +649,9 @@ int confirmConSuccessfull(int client_fd)
 
 void *registerConnection(void *pkg)
 {
+    printf("Thread :: RegisterConnection :: Start");
+    nextLine();
+
     int client_fd = *(((struct package*) pkg)->sockfd);
     Registry_Json *confirm_reg = ((struct package*) pkg)->reg2;
     pthread_mutex_t *confirm_reg_lock = ((struct package *) pkg)->confirm_reg_lock;
@@ -590,9 +663,9 @@ void *registerConnection(void *pkg)
     // count for sleep
     int c_sleep = 2;
     // message will be received in this char array
-    char *buf;
+    char *buf = malloc(100 * sizeof(char));
     // received message length
-    int len;
+    int len = 100;
 
     // set socket non-blocking
     fcntl(client_fd, F_SETFL, O_NONBLOCK);
@@ -608,17 +681,22 @@ void *registerConnection(void *pkg)
             continue;
         }
 
+        printf("Server Inbound ::: Register Connection :: Redister Username : %s", buf);
+        nextLine();
+
         Json new_reg = createJson();
+        char *temp = malloc(100 * sizeof(char)); 
         char *jj = "client_sockfd:";
         char cc[10];
 
         sprintf(cc, "%d", client_fd);
 
-        strcat(jj, cc);
+        strcat(temp, jj);
+        strcat(temp, cc);
 
-        String cfd = getString(jj);
+        String cfd = getStringFrom(temp);
         addJson(&new_reg, cfd);
-        String username = getString(buf);
+        String username = getStringFrom(buf);
         addJson(&new_reg, username);
 
         uuid_t binuuid;
@@ -626,8 +704,12 @@ void *registerConnection(void *pkg)
         char *uuid = malloc(37);
         uuid_unparse(binuuid, uuid);
         char *uid = "user_id:";
-        strcat(uid, uuid);
-        String userid = getString(uid);
+
+        char *ttt = malloc(100 * sizeof(char));
+
+        strcat(ttt, uid);
+        strcat(ttt, uuid);
+        String userid = getStringFrom(ttt);
 
         addJson(&new_reg, userid);
 
@@ -637,6 +719,9 @@ void *registerConnection(void *pkg)
         int mlen = strLen(msg);
 
         int msendlen = 0;
+
+        printf("Server Outbound ::: Register Connection :: Msg send : %s", msg);
+
         if((msendlen = send(client_fd, msg, mlen, 0)) == -1)
         {
                 perror("Server Outbound ::: Connection_Success_Msg :: Error Sending Message to Client");
@@ -644,6 +729,9 @@ void *registerConnection(void *pkg)
 
         break;
     }
+
+    printf("Thread :: ConfirmConnectionLoop :: EXIT");
+    nextLine();
 
     pthread_exit(0);
 }

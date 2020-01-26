@@ -1,3 +1,8 @@
+/* string_array.h */
+#ifndef STRING_H
+#define STRING_H
+
+
 #define INIT_CAPACITY 10
 #define INCREMENT_CAPACITY 10
 
@@ -32,3 +37,6 @@ void addString(SArray *, String *);
 SArray split(String, char);
 void addString(SArray *, String *);
 void incrSArrayCapacity(SArray *);
+
+
+#endif /* STRING_H */

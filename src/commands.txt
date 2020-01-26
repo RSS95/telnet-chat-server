@@ -1,0 +1,7 @@
+gcc -g string_array.c  chat_client.c -luuid -o client_executable_2020-01-26.o
+
+valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./client
+
+gcc -g string_array.c json.c chat_server.c -luuid -pthread -o server_executable_2020-01-26.o
+
+valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./server2
