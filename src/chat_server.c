@@ -25,21 +25,13 @@
 #define REQUEST_QUEUE_LENGTH 1000
 
 
-//struct Registry
-//{
-//    Json *reg;
-//    int size;
-//    int capacity;
-//}typedef Registry;
-
-
 struct package
 {
     int *sockfd;
     int c_ter;
-    Registry_Json *reg;
-    Registry_Json *reg2;
-    Registry_Json *reg3;
+    Registry *reg;
+    Registry *reg2;
+    Registry *reg3;
     pthread_mutex_t *accept_reg_lock;
     pthread_mutex_t *confirm_reg_lock;
     pthread_mutex_t *chat_reg_lock;
@@ -52,117 +44,6 @@ void *confirmConnectionLoop();
 void *acceptConnectionLoop(void *);
 void *get_in_addr(struct sockaddr *);
 void sigchld_handler(int);
-//void printReg(Registry);
-//void incrRegCapacity(Registry *, int);
-//void addReg(Registry *, Json, pthread_mutex_t *);
-//Registry createRegister(pthread_mutex_t *);
-
-
-Registry_Json createRegister(pthread_mutex_t *lock)
-{
-    Registry_Json registry;
-    registry.reg = malloc(16 * sizeof(Registry_Json));
-    registry.size = 0;
-    registry.capacity = 16;
-
-    int init_lock = pthread_mutex_init(lock, NULL);
-
-    if(init_lock != 0)
-    {
-        perror("Mutex Initialization Failed.");
-        nextLine();
-//        return NULL;
-    }
-
-    return registry;
-}
-
-void initRegister(Registry_Json *registry, pthread_mutex_t *lock)
-{
-    registry->reg = malloc(16 * sizeof(Registry_Json));
-    registry->size = 0;
-    registry->capacity = 16;
-
-    int init_lock = pthread_mutex_init(lock, NULL);
-
-    if(init_lock != 0)
-    {
-        perror("Mutex Initialization Failed.");
-        nextLine();
-//        return NULL;
-    }
-
-//    return registry;
-}
-
-void addReg(Registry_Json *reg, Json json, pthread_mutex_t *lock)
-{
-    pthread_mutex_lock(lock);
-
-    if((reg->size + 8) > reg->capacity)
-    {
-        incrRegCapacity(reg, 16);
-    }
-
-    reg->reg[reg->size++] = json;
-
-    pthread_mutex_unlock(lock);
-}
-
-void incrRegCapacity(Registry_Json *reg, int incr)
-{
-    Json *old = reg->reg;
-    Json *new = malloc((reg->capacity + incr) * sizeof(Registry_Json));
-
-    for(int i = 0; i < reg->size; i++)
-    {
-        new[i] = old[i];
-    }
-
-    reg->reg = new;
-    reg->capacity = reg->capacity + incr;
-}
-
-void printReg(Registry_Json reg)
-{
-    if(reg.size > 0)
-    {
-        for(int i = 0; i < reg.size; i++)
-        {
-            putchar('{');
-            for(int j = 0; j < reg.reg[i].size; j++)
-            {
-                String key = reg.reg[i].entry[j].key;
-                String value = reg.reg[i].entry[j].value;
-
-                nextLine();
-                putchar('\t');
-                printS(&key);
-                putchar(':');
-                printS(&value);
-            }
-            nextLine();
-            putchar('}');
-        }
-        nextLine();
-    }
-    else
-    {
-        printf("{}");
-        nextLine();
-    }
-}
-
-//const pthread_mutex_t accept_reg_lock;
-//const pthread_mutex_t confirm_reg_lock;
-//const pthread_mutex_t chat_reg_lock;
-
-//const Registry_Json accept_reg;// = createRegister(&accept_reg_lock);
-//const Registry_Json confirm_reg;// = createRegister(&confirm_reg_lock);
-//const Registry_Json chat_reg;// = createRegister(&chat_reg_lock);
-
-//const int accept_ter_flag = 0;
-//const int accept_exit_flag = 0;
 
 
 /* TODO: Know what this function does
@@ -203,9 +84,9 @@ int main()
     pthread_mutex_t confirm_reg_lock;
     pthread_mutex_t chat_reg_lock;
 
-    Registry_Json accept_reg = createRegister(&accept_reg_lock);
-    Registry_Json confirm_reg = createRegister(&confirm_reg_lock);
-    Registry_Json chat_reg = createRegister(&chat_reg_lock);
+    Registry* accept_reg = createRegister(&accept_reg_lock);
+    Registry* confirm_reg = createRegister(&confirm_reg_lock);
+    Registry* chat_reg = createRegister(&chat_reg_lock);
 
     int accept_ter_flag = 0;
     int accept_exit_flag = 0;
@@ -332,17 +213,14 @@ int main()
     struct package p1;
     p1.sockfd = &sockfd;
     p1.c_ter = 100;
-    p1.reg = &accept_reg;
+    p1.reg = accept_reg;
     p1.accept_reg_lock = &accept_reg_lock;
 
     struct package p2;
-    p2.reg = &accept_reg;
-    p2.reg2 = &confirm_reg;
+    p2.reg = accept_reg;
+    p2.reg2 = confirm_reg;
     p2.confirm_reg_lock = &confirm_reg_lock;
 
-//    int arg[2];
-//    arg[0] = sockfd;
-//    arg[1] = 100;
 
     rc = pthread_attr_init(&attr1);
     rc = pthread_attr_setdetachstate(&attr1, PTHREAD_CREATE_DETACHED);
@@ -369,41 +247,6 @@ int main()
         printReg(confirm_reg);
     }
 
-//    // main accept() loop :: infinite
-//    while(1)
-//    {
-//        sin_size = sizeof their_addr;
-//        new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-//        if (new_fd == -1)
-//        {
-//            perror("Server Inbound Connection::: Accept Connection Error");
-//            perror("Server Inbound Connection::: Will Accept Next Connection From Queue");
-//            continue;
-//        }
-//
-//        // inet_ntop converts struct address form to just char array form (string form)
-//        inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
-//
-//        printf("Server Inbound Connection::: Got Connection from %s\n", s);
-//
-//        // fork() in linux creates child process, ie. new thread
-//        // fork() returns the pid of process to parent thread/process, ie. positive number
-//        // after calling fork() the child process/thred also starts from same line
-//        // and for child process/thread fork() will return 0 (or false)
-//        // on error fork() will return -1 to parent process/thread
-//        if (!fork()) // go inside if block only if current thread is child thread/process
-//        {
-//            close(sockfd); // child doesn't need the listener
-//            if (send(new_fd, "Hello World!!!", 13, 0) == -1)
-//            {
-//                perror("Server Outbound::: Error Sending Message to Connection");
-//            }
-//            close(new_fd); // after sending one message close new socket in child thread
-//            exit(0); // exit child thread
-//        }
-//
-//        close(new_fd); // parent doesn't need new socket now
-//    }
 
     close(sockfd);
 
@@ -432,7 +275,7 @@ void *acceptConnectionLoop(void *d)
 
     int ter_count = iii->c_ter;
 
-    Registry_Json *accept_reg = iii->reg;
+    Registry *accept_reg = iii->reg;
 
     pthread_mutex_t *accept_reg_lock = iii->accept_reg_lock;
 
@@ -460,7 +303,9 @@ void *acceptConnectionLoop(void *d)
         if(client_fd == -1)
         {
             perror("Server Accept Connection ::: Accept Connection Error");
+            nextLine();
             perror("Server Accept Connection ::: Will Accept Next Connection From Queue");
+            nextLine();
             error_count++;
             continue;
         }
@@ -472,10 +317,10 @@ void *acceptConnectionLoop(void *d)
 
         Json client_json= createJson();
 
-        char *oot = malloc(500 * sizeof(char));
-        char *oo = malloc(500 * sizeof(char));
+        char *oot = calloc(100, sizeof(char));
+        char *oo = calloc(100, sizeof(char));
         char *t = "client_sockfd:";
-        char *client_fd_s = malloc(100 * sizeof(char));
+        char *client_fd_s = calloc(100, sizeof(char));
         sprintf(client_fd_s, "%d", client_fd);
         strcat(oot, t);
         strcat(oot, client_fd_s);
@@ -500,21 +345,9 @@ void *acceptConnectionLoop(void *d)
         printf("Thread :: AcceptConnectionLoop :: Add new connection to accept_reg");
         nextLine();
 
-        addReg(accept_reg, client_json, accept_reg_lock);
+        addReg(accept_reg, &client_json, accept_reg_lock);
     }
 
-//    if(error_count >= ter_count)
-//    {
-//        accept_exit_flag = -1;
-//    }
-//    else if(accept_ter_flag == 1)
-//    {
-//        accept_exit_flag = 1;
-//    }
-//    else
-//    {
-//        accept_exit_flag = 2;
-//    }
 
     printf("Thread :: AcceptConnectionLoop :: Exit");
     nextLine();
@@ -531,8 +364,8 @@ void *confirmConnectionLoop(void *pkg)
     printf("Thread :: ConfirmConnectionLoop :: Start");
     nextLine();
 
-    Registry_Json *accept_reg = ((struct package*) pkg)->reg;
-    Registry_Json *confirm_reg = ((struct package*) pkg)->reg2;
+    Registry *accept_reg = ((struct package*) pkg)->reg;
+    Registry *confirm_reg = ((struct package*) pkg)->reg2;
 
     pthread_mutex_t *confirm_reg_lock = ((struct package*) pkg)->confirm_reg_lock;
 
@@ -593,7 +426,7 @@ void *confirmConnectionLoop(void *pkg)
 
             //registerConnection(client_fd);
 
-            String sss = getString("confirm_msg_send:true");
+            String sss = getStringFrom("confirm_msg_send:true");
 
             addJson(&j_client, sss);        
             accept_reg->reg[c_reg++] = j_client;
@@ -631,17 +464,20 @@ int confirmConSuccessfull(int client_fd)
     if((msendlen = send(client_fd, msg, mlen, 0)) == -1)
     {
         perror("Server Outbound ::: Connection_Success_Msg :: Error Sending Message to Client");
+        nextLine();
     }
 
     if(msendlen == mlen)
     {
         printf("Server Outbound ::: Connection Confirmation Message Send Successfully to Socket_FD:: %d", client_fd);
+        nextLine();
 
         return 1;
     }
     else
     {
         printf("Server Outbound ::: Connection Confirmation Message Send Unsuccessfully to Socket_FD:: %d", client_fd);
+        nextLine();
 
         return 0;
     }
@@ -653,7 +489,7 @@ void *registerConnection(void *pkg)
     nextLine();
 
     int client_fd = *(((struct package*) pkg)->sockfd);
-    Registry_Json *confirm_reg = ((struct package*) pkg)->reg2;
+    Registry *confirm_reg = ((struct package*) pkg)->reg2;
     pthread_mutex_t *confirm_reg_lock = ((struct package *) pkg)->confirm_reg_lock;
 
     // flag for termination, when c_ter reaches this number terminate
@@ -675,7 +511,9 @@ void *registerConnection(void *pkg)
         if(recv(client_fd, buf, len, 0) == -1)
         {
             perror("Server Inbound ::: Register Connection :: Register Message Not Received");
+            nextLine();
             printf("Server Inbound ::: Register Connection :: Client_FD : %d :: Wait Count : %d ", client_fd, c_ter);
+            nextLine();
             c_ter++;
             sleep(c_sleep);
             continue;
@@ -705,7 +543,7 @@ void *registerConnection(void *pkg)
         uuid_unparse(binuuid, uuid);
         char *uid = "user_id:";
 
-        char *ttt = malloc(100 * sizeof(char));
+        char *ttt = calloc(100, sizeof(char));
 
         strcat(ttt, uid);
         strcat(ttt, uuid);
@@ -713,7 +551,7 @@ void *registerConnection(void *pkg)
 
         addJson(&new_reg, userid);
 
-        addReg(confirm_reg, new_reg, confirm_reg_lock);
+        addReg(confirm_reg, &new_reg, confirm_reg_lock);
 
         char *msg = "registeration:true";
         int mlen = strLen(msg);
@@ -721,10 +559,12 @@ void *registerConnection(void *pkg)
         int msendlen = 0;
 
         printf("Server Outbound ::: Register Connection :: Msg send : %s", msg);
+        nextLine();
 
         if((msendlen = send(client_fd, msg, mlen, 0)) == -1)
         {
                 perror("Server Outbound ::: Connection_Success_Msg :: Error Sending Message to Client");
+                nextLine();
         }
 
         break;

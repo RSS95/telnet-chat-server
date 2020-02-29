@@ -7,17 +7,19 @@
 #include "json.h"
 
 
-struct Registry_Json
+struct Registry
 {
     Json *reg;
     int size;
     int capacity;
-}typedef Registry_Json;
+}typedef Registry;
 
-void printReg(Registry_Json);
-void incrRegCapacity(Registry_Json *, int);
-void addReg(Registry_Json *, Json, pthread_mutex_t *);
-Registry_Json createRegister(pthread_mutex_t *);
-void initRegister(Registry_Json *, pthread_mutex_t *);
+
+Registry* createRegister(pthread_mutex_t *);
+int initRegister(Registry *, pthread_mutex_t *);
+void addReg(Registry *, Json *, pthread_mutex_t *);
+void incrRegCapacity(Registry *, int);
+void printReg(Registry *);
+
 
 #endif /* REGISTRY_H */

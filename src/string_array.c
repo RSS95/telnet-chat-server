@@ -160,13 +160,13 @@ void printC(char *array)
 
 void appendStr(String *string, char *append)
 {
-    printf("Append String :: (\"");
+    //printf("Append String :: (\"");
 
-    printS(string);
+    //printS(string);
     //nextLine();
-    printf("\")  +  (\"");
-    printC(append);
-    printf("\"");
+    //printf("\")  +  (\"");
+    //printC(append);
+    //printf("\"");
 //    nextLine();
 
     int appendLen = strLen(append);
@@ -174,8 +174,8 @@ void appendStr(String *string, char *append)
     {
         incrCapacity(string, appendLen);
 //        printS(string);
-        printf(")");
-        nextLine();
+        //printf(")");
+        //nextLine();
         appendStr(string, append);
     }
     else
@@ -189,9 +189,9 @@ void appendStr(String *string, char *append)
         string->string[i] = append[c];
         string->length = string->length + appendLen - 1;
 
-        printf(") :: Result : ");
-        printS(string);
-        nextLine();
+       // printf(") :: Result : ");
+       // printS(string);
+       // nextLine();
     }
 
 //    printf(") :: Result : ");
@@ -257,10 +257,12 @@ int findPos(String str, char c)
 
 SArray split(String str, char c)
 {
-    printf("Split :: String : \"");
-    printS(&str);
-    printf("\" :: char : '%s'", &c); 
-    nextLine();
+    //printf("Split :: String : \"");
+    //printS(&str);
+    //printf("\" :: char : '");
+    //putchar(c);
+    //putchar('\'');
+    //nextLine();
 
     SArray sarr = createSArray();
     int bcount = -1;
@@ -269,8 +271,8 @@ SArray split(String str, char c)
         String s = getString();
 
         int len = strLen(str.string);
-        printf("Split :: String Length : %d", len);
-        nextLine();
+        //printf("Split :: String Length : %d", len);
+        //nextLine();
 
         for(int j = 0; j < str.length - 1; j++)
         {
@@ -283,8 +285,8 @@ SArray split(String str, char c)
                 return sarr;
             }
 
-            printf("Split :: Iterator Base Count : %d", bcount);
-            nextLine();
+            //printf("Split :: Iterator Base Count : %d", bcount);
+            //nextLine();
 
             if((str.string[bcount] == c) || (bcount >= str.length - 1))
             {

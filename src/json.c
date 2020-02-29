@@ -83,12 +83,12 @@ void incrJsonCapacity(Json *json)
     json->capacity = json->capacity + 10;
 }
 
-String getVal(Json json, String key)
+String getVal(Json *json, String key)
 {
     String s;
-    Entry *e = json.entry;
+    Entry *e = json->entry;
 
-    for(int i = 0; i < json.size; i++)
+    for(int i = 0; i < json->size; i++)
     {
         if(compareStr(key, e[i].key) == 0)
         {
@@ -101,4 +101,20 @@ String getVal(Json json, String key)
     printf("Program Exit");
     nextLine();
     exit(0);
+}
+
+int jsonContainsKey(Json *json, String key)
+{
+    String s;
+    Entry *e = json->entry;
+
+    for(int i = 0; i < json->size; i++)
+    {
+        if(compareStr(key, e[i].key) == 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }

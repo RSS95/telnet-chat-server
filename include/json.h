@@ -13,9 +13,9 @@ struct Entry{
 }typedef Entry;
 
 struct Json{
-        Entry *entry;
-            int size;
-                int capacity;
+    Entry *entry;
+    int size;
+    int capacity;
 }typedef Json;
 
 
@@ -23,7 +23,8 @@ Entry createEntry();
 Json createJson();
 void addJson(Json *, String);
 void incrJsonCapacity(Json *);
-String getVal(Json, String);
+String getVal(Json *, String);
+int jsonContainsKey(Json *, String);
 
 
 #endif /* TEST_H */
